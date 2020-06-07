@@ -5,5 +5,4 @@ public abstract class AbstractAccount {
 	private double balance;
 	private AccountStatus status;
 	private AccountType type;
-	//hello?
 }
