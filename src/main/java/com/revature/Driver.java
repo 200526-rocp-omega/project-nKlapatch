@@ -43,7 +43,7 @@ public class Driver {
 		AbstractAccount sa = new SavingsAccount(0,250,AccountStatus.Pending);
 		System.out.println(sa);
 		
-		
+		System.out.println("sa StatusID = " + sa.getStatusId());
 		
 		
 	}
