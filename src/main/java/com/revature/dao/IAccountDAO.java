@@ -10,7 +10,7 @@ public interface IAccountDAO {
 	
 	public List<AbstractAccount> findAll();
 	
-	public AbstractAccount findByID(int id);
+	public AbstractAccount findById(int id);
 	
 	public List<AbstractAccount> findByUser(User u);
 	
@@ -21,4 +21,5 @@ public interface IAccountDAO {
 	public int linkAccountToUser(AbstractAccount a, User u);
 	
 	public int unlinkAccountFromUser(AbstractAccount a, User u);
+
 }

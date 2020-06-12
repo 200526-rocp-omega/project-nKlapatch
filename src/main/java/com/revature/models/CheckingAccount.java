@@ -1,21 +1,22 @@
 package com.revature.models;
 
-public class SavingsAccount extends AbstractAccount {
-	
-	public SavingsAccount() {
+public class CheckingAccount extends AbstractAccount {
+
+	public CheckingAccount() {
 		super();
-		setType(new AccountType(2,"Savings"));
+		setType(new AccountType(1,"Checking"));
 	}
 	
-	public SavingsAccount(int accountID, double balance, AccountStatus status) {
+	
+	public CheckingAccount(int accountID, double balance, AccountStatus status) {
 		super();
 		setAccountId(accountID);
 		setBalance(balance);
 		setStatus(status);
-		setType(new AccountType(2,"Savings"));
+		setType(new AccountType(1,"Checking"));
 	}
 	
-	public SavingsAccount(int accountID, double balance, int status) {
+	public CheckingAccount(int accountID, double balance, int status) {
 		super();
 		if(AbstractAccount.statusMap.isEmpty()) {
 			AbstractAccount.statusMap.put(1,AccountStatus.Pending);
@@ -27,14 +28,12 @@ public class SavingsAccount extends AbstractAccount {
 		setAccountId(accountID);
 		setBalance(balance);
 		setStatus(AbstractAccount.statusMap.get(status));
-		setType(new AccountType(2,"Savings"));
+		setType(new AccountType(1,"Checking"));
 	}
-
+	
 	@Override
 	public String toString() {
-		return "SavingsAccount [accountId=" + getAccountId() + ", balance=$" + getBalance() + ", status=" + getStatus() + ", type=" + getType();
+		return "CheckingAccount [accountId=" + getAccountId() + ", balance=$" + getBalance() + ", status=" + getStatus() + ", type=" + getType();
 	}
-	
-	
 
 }
