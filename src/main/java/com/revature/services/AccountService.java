@@ -5,7 +5,6 @@ import java.util.List;
 import com.revature.dao.AccountDAO;
 import com.revature.dao.IAccountDAO;
 import com.revature.models.AbstractAccount;
-import com.revature.models.User;
 
 public class AccountService {
 	private IAccountDAO dao = new AccountDAO();

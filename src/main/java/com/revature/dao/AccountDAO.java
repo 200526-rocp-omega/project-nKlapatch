@@ -9,9 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.revature.models.AbstractAccount;
-import com.revature.models.AccountStatus;
 import com.revature.models.CheckingAccount;
-import com.revature.models.Role;
 import com.revature.models.SavingsAccount;
 import com.revature.models.User;
 import com.revature.util.ConnectionUtil;

@@ -1,17 +1,12 @@
 package com.revature;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import com.revature.models.AbstractAccount;
 import com.revature.models.AccountStatus;
-import com.revature.models.CheckingAccount;
-import com.revature.models.Role;
-import com.revature.models.SavingsAccount;
 import com.revature.models.User;
 import com.revature.services.AccountService;
 import com.revature.services.UserService;
-import com.revature.util.ConnectionUtil;
 
 public class Driver {
 
@@ -25,8 +20,9 @@ public class Driver {
 		//uService.insert(newUser);
 		
 		//Update a user's data
-		User changedUser = new User(40,"Named","passer","Namer","Herer","namber@he.com",new Role(2,"Premium"));
-		uService.update(changedUser);
+		//User changedUser = uService.findById(6);
+		//changedUser.setRole(new Role(3,"Employee"));
+		//uService.update(changedUser);
 		
 		//Delete a user
 		uService.delete(42);

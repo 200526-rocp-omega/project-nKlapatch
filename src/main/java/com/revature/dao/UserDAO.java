@@ -130,7 +130,7 @@ public class UserDAO implements IUserDAO {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return new User();
+		return null;
 	}
 
 	@Override

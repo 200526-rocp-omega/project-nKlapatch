@@ -2,9 +2,13 @@ package com.revature.services;
 
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
+
 import com.revature.dao.IUserDAO;
 import com.revature.dao.UserDAO;
+import com.revature.exceptions.NotLoggedInException;
 import com.revature.models.User;
+import com.revature.templates.LoginTemplate;
 
 public class UserService {
 	
@@ -32,5 +36,30 @@ public class UserService {
 		
 		public int delete(int id) {
 			return dao.delete(id);
+		}
+		
+		public User login(LoginTemplate lt) {
+			User u = findByUsername(lt.getUsername());
+			
+			//If the username is wrong
+			if(u == null) {
+				return null;
+			}
+			
+			//If the user enters the right username and password
+			if(u.getPassword().equals(lt.getPassword())) {
+				return u;
+			}
+			
+			//If the password is wrong for the user
+			return null;
+		}
+		
+		public void logout(HttpSession session) {
+			if(session == null || session.getAttribute("currentUser") == null) {
+				throw new NotLoggedInException("User must be logged in to log out.");
+			}
+			
+			session.invalidate();
 		}
 }
