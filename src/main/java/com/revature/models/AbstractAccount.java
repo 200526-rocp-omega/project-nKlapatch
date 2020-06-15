@@ -3,7 +3,7 @@ package com.revature.models;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractAccount {
+public class AbstractAccount {
 	private int accountId;
 	private double balance;
 	private AccountStatus status;
@@ -35,12 +35,6 @@ public abstract class AbstractAccount {
 	}
 	
 	public int getStatusId() {
-		if(statusMap.isEmpty()) {
-			statusMap.put(1,AccountStatus.Pending);
-			statusMap.put(2, AccountStatus.Open);
-			statusMap.put(3, AccountStatus.Closed);
-			statusMap.put(4, AccountStatus.Denied);
-		}
 		
 		int statusInt = 0;
 		

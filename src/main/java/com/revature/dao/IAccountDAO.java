@@ -6,20 +6,26 @@ import com.revature.models.AbstractAccount;
 import com.revature.models.User;
 
 public interface IAccountDAO {
-	public int insert(AbstractAccount a);
+	int insert(AbstractAccount a);
 	
-	public List<AbstractAccount> findAll();
+	List<AbstractAccount> findAll();
 	
-	public AbstractAccount findById(int id);
+	AbstractAccount findById(int id);
 	
-	public List<AbstractAccount> findByUser(User u);
+	List<AbstractAccount> findByUser(int id);
 	
-	public int update(AbstractAccount a);
+	List<AbstractAccount> findByStatus(int status);
 	
-	public int delete(int id);
+	int update(AbstractAccount a);
 	
-	public int linkAccountToUser(AbstractAccount a, User u);
+	int delete(int id);
 	
-	public int unlinkAccountFromUser(AbstractAccount a, User u);
+	int linkAccountToUser(AbstractAccount a, User u);
+	
+	int unlinkAccountFromUser(AbstractAccount a, User u);
+
+	int highestID();
+	
+	
 
 }

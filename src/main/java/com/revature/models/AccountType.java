@@ -23,6 +23,10 @@ public class AccountType {
 		this.type = type;
 	}
 	
+	public AccountType() {
+		super();
+	}
+	
 	@Override
 	public String toString() {
 		return "AccountType [id=" + id + ", type=" + type + "]";
