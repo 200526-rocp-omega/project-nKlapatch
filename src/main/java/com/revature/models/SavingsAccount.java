@@ -35,6 +35,6 @@ public class SavingsAccount extends AbstractAccount {
 		return "SavingsAccount [accountId=" + getAccountId() + ", balance=$" + getBalance() + ", status=" + getStatus() + ", type=" + getType();
 	}
 	
-	
+	public static double annualInterest = .0825;
 
 }

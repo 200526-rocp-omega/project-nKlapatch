@@ -43,4 +43,21 @@ public class AccountController {
 		return aServ.findByUser(id);
 	}
 
+	public int updateAccount(AbstractAccount a) {
+		return aServ.update(a);
+	}
+	
+	public int deposit(AbstractAccount a,double amount) {
+		return aServ.deposit(a,amount);
+	}
+
+	public int withdraw(AbstractAccount a, double amount) {
+		return aServ.withdraw(a,amount);
+		
+	}
+	
+	public int transfer(AbstractAccount sender, AbstractAccount receiver, double amount) {
+		return aServ.transfer(sender, receiver, amount);
+	}
+
 }

@@ -19,6 +19,9 @@ public class AbstractAccount {
 		return balance;
 	}
 	public void setBalance(double balance) {
+		if(balance < 0) {
+			throw new IllegalArgumentException();
+		}
 		this.balance = balance;
 	}
 	public AccountStatus getStatus() {

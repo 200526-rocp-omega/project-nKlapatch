@@ -49,5 +49,49 @@ public class AccountService {
 	public List<AbstractAccount> findByUser(int id) {
 		return dao.findByUser(id);
 	}
+	
+	public int deposit(AbstractAccount a, double amount) {
+		if (amount <= 0) {
+			throw new IllegalArgumentException();
+		}
+		else {
+			a.setBalance(a.getBalance() + amount);
+		}
+		return dao.update(a);
+	}
+
+	public int withdraw(AbstractAccount a, double amount) {
+		if (amount <= 0) {
+			throw new IllegalArgumentException();
+		}
+		else {
+			a.setBalance(a.getBalance() - amount);
+		}
+		return dao.update(a);
+	}
+	
+	public int transfer(AbstractAccount sender, AbstractAccount receiver, double amount) {
+		if (amount <= 0) {
+			throw new IllegalArgumentException();
+		}
+		else {
+			sender.setBalance(sender.getBalance() - amount);
+			receiver.setBalance(receiver.getBalance() + amount);
+			
+			if(dao.update(sender) == 0) {
+				if(dao.update(receiver) == 0) {
+					return 0;
+				}
+				else {
+					sender.setBalance(sender.getBalance() + amount);
+					return 1;
+				}
+			}
+			else {
+				return 1;
+			}
+		}
+	}
+	
 
 }
