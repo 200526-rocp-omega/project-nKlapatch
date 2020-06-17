@@ -45,7 +45,7 @@ public class AccountDAO implements IAccountDAO {
 		List<AbstractAccount> allAccounts = new ArrayList<>();
 		
 		try (Connection conn = ConnectionUtil.getConnection()) {
-			String sql = "SELECT * FROM ACCOUNTS";
+			String sql = "SELECT * FROM ACCOUNTS ORDER BY id";
 			Statement stmt = conn.createStatement();
 			
 			ResultSet rs = stmt.executeQuery(sql);
@@ -101,7 +101,6 @@ public class AccountDAO implements IAccountDAO {
 				}
 				return a;
 			}
-			else System.out.println("No account found with the entered ID");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -115,7 +114,8 @@ public class AccountDAO implements IAccountDAO {
 		try (Connection conn = ConnectionUtil.getConnection()) {
 			String sql = "SELECT * FROM ACCOUNTS"
 					+ " INNER JOIN USERS_ACCOUNTS ON ACCOUNTS.id = USERS_ACCOUNTS.account_id"
-					+ " WHERE USERS_ACCOUNTS.user_id = ?";
+					+ " WHERE USERS_ACCOUNTS.user_id = ?"
+					+ " ORDER BY ACCOUNTS.id";
 			
 			PreparedStatement stmt = conn.prepareStatement(sql);
 			stmt.setInt(1, id);
@@ -153,7 +153,7 @@ public class AccountDAO implements IAccountDAO {
 		List<AbstractAccount> allAccounts = new ArrayList<>();
 		
 		try (Connection conn = ConnectionUtil.getConnection()) {
-			String sql = "SELECT * FROM ACCOUNTS WHERE status_id = ?";
+			String sql = "SELECT * FROM ACCOUNTS WHERE status_id = ? ORDER BY id";
 			PreparedStatement stmt = conn.prepareStatement(sql);
 			stmt.setInt(1, status);
 			
@@ -199,7 +199,6 @@ public class AccountDAO implements IAccountDAO {
 				return 0;
 			}
 			else {
-				System.out.println("No account was updated.");
 				return 1;
 			}
 		} catch (SQLException e) {
@@ -234,7 +233,6 @@ public class AccountDAO implements IAccountDAO {
 			String sql = "INSERT INTO USERS_ACCOUNTS (user_id,account_id) VALUES (?,?)";
 			
 			PreparedStatement stmt = conn.prepareStatement(sql);
-			System.out.println(u.getId() + " " + a.getAccountId());
 			stmt.setInt(1, u.getId());
 			stmt.setInt(2, a.getAccountId());
 			stmt.executeUpdate();

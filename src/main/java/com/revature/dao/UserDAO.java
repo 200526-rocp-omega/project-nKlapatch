@@ -46,7 +46,7 @@ public class UserDAO implements IUserDAO {
 		List<User> allUsers = new ArrayList<>();
 		
 		try (Connection conn = ConnectionUtil.getConnection()) {
-			String sql = "SELECT * FROM USERS INNER JOIN ROLES ON USERS.role_id = ROLES.id";
+			String sql = "SELECT * FROM USERS INNER JOIN ROLES ON USERS.role_id = ROLES.id ORDER BY USERS.id";
 			Statement stmt = conn.createStatement();
 			
 			ResultSet rs = stmt.executeQuery(sql);
@@ -97,11 +97,10 @@ public class UserDAO implements IUserDAO {
 				User u = new User(fetchedID,username,password,firstName,lastName,email,r);
 				return u;
 			}
-			else System.out.println("No user found with the entered ID");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		return new User();
+		return null;
 	}
 
 	@Override
@@ -150,7 +149,6 @@ public class UserDAO implements IUserDAO {
 				return 0;
 			}
 			else {
-				System.out.println("No user was updated.");
 				return 1;
 			}
 		} catch (SQLException e) {
@@ -170,7 +168,6 @@ public class UserDAO implements IUserDAO {
 				return 0;
 			}
 			else {
-				System.out.println("No user was deleted.");
 				return 1;
 			}
 		} catch (SQLException e) {

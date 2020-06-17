@@ -59,5 +59,9 @@ public class AccountController {
 	public int transfer(AbstractAccount sender, AbstractAccount receiver, double amount) {
 		return aServ.transfer(sender, receiver, amount);
 	}
+	
+	public int linkUserToAccount(AbstractAccount a, User u) {
+		return aServ.linkAccountToUser(a, u);
+	}
 
 }

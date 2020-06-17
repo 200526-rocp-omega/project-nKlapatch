@@ -11,19 +11,25 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.revature.authorizations.AuthService;
 import com.revature.exceptions.AuthorizationException;
+import com.revature.exceptions.NonexistentAccountException;
+import com.revature.exceptions.NonexistentUserException;
 import com.revature.exceptions.NotLoggedInException;
+import com.revature.exceptions.ProhibitedStatusException;
 import com.revature.exceptions.ProhibitedUserException;
 import com.revature.models.AbstractAccount;
 import com.revature.models.AccountStatus;
+import com.revature.models.Role;
 import com.revature.models.SavingsAccount;
 import com.revature.models.User;
 import com.revature.services.UserService;
 import com.revature.templates.DepWithTemplate;
 import com.revature.templates.LoginTemplate;
 import com.revature.templates.MessageTemplate;
+import com.revature.templates.SharingTemplate;
 import com.revature.templates.TimeTemplate;
 import com.revature.templates.TransferTemplate;
 
@@ -56,8 +62,8 @@ public class FrontController extends HttpServlet {
 			case "users":
 				if(portions.length == 2) {
 					int id = Integer.parseInt(portions[1]);
-					System.out.println(id);
 					AuthService.guard(req.getSession(false), id, "Employee","Admin");
+					AuthService.checkForUser(id);
 					User u = userController.findUserById(id);
 					res.setStatus(200);
 					res.getWriter().println(om.writeValueAsString(u));
@@ -95,7 +101,7 @@ public class FrontController extends HttpServlet {
 					AbstractAccount a = accountController.findAccountById(id);
 					res.setStatus(200);
 					res.getWriter().println(om.writeValueAsString(a));
-				} else {
+				} else if (portions.length == 1) {
 					AuthService.guard(req.getSession(false), "Employee","Admin");
 					List<AbstractAccount> all = accountController.findAllAccounts();
 					res.setStatus(200);
@@ -110,12 +116,30 @@ public class FrontController extends HttpServlet {
 			res.setStatus(401);
 			MessageTemplate message = new MessageTemplate("You aren't logged in.");
 			res.getWriter().println(om.writeValueAsString(message));
-		} 
+			res.setContentType("application/json"); 
+		}
+		catch (ProhibitedStatusException e) {
+			res.setStatus(401);
+			res.getWriter().println(om.writeValueAsString(new MessageTemplate("Your account is not open.")));
+			res.setContentType("application/json"); 
+		}
 		catch(AuthorizationException e) {
 			res.setStatus(401);
 			MessageTemplate message = new MessageTemplate("Access denied.");
 			res.getWriter().println(om.writeValueAsString(message));
+			res.setContentType("application/json"); 
 		}
+		catch(NonexistentAccountException e) {
+			res.setStatus(400);
+			res.getWriter().println(om.writeValueAsString(new MessageTemplate("Invalid Account ID")));
+			res.setContentType("application/json"); 
+		}
+		catch(NonexistentUserException e) {
+			res.setStatus(400);
+			res.getWriter().println(om.writeValueAsString(new MessageTemplate("Invalid User ID")));
+			res.setContentType("application/json"); 
+		}
+		
 	}
 	
 	@Override
@@ -196,11 +220,12 @@ public class FrontController extends HttpServlet {
 					while ((dataLine = amountReader.readLine()) != null) {
 						amountBuilder.append(dataLine);
 					}
-					String amountBody = amountBuilder.toString();
+					String dataBody = amountBuilder.toString();
 					switch(portions[1]) {
 					case "deposit":
-						DepWithTemplate depTemplate = om.readValue(amountBody, DepWithTemplate.class);
-						AuthService.guardAccount(aSession, depTemplate.getAccountId(), "Admin");
+						DepWithTemplate depTemplate = om.readValue(dataBody, DepWithTemplate.class);
+						AuthService.guardAccount(req.getSession(false), depTemplate.getAccountId(), "Admin");
+						AuthService.checkStatus(req.getSession(false), depTemplate.getAccountId());
 						
 						AbstractAccount depositingAccount = accountController.findAccountById(depTemplate.getAccountId());
 						if (depositingAccount == null) {
@@ -221,8 +246,9 @@ public class FrontController extends HttpServlet {
 							
 						break;
 					case "withdraw":
-						DepWithTemplate withTemplate = om.readValue(amountBody, DepWithTemplate.class);
-						AuthService.guardAccount(aSession, withTemplate.getAccountId(), "Admin");
+						DepWithTemplate withTemplate = om.readValue(dataBody, DepWithTemplate.class);
+						AuthService.guardAccount(req.getSession(false), withTemplate.getAccountId(), "Admin");
+						AuthService.checkStatus(req.getSession(false), withTemplate.getAccountId());
 						
 						AbstractAccount withdrawingAccount = accountController.findAccountById(withTemplate.getAccountId());
 						if (withdrawingAccount == null) {
@@ -247,8 +273,10 @@ public class FrontController extends HttpServlet {
 						}
 						break;
 					case "transfer":
-						TransferTemplate transTemplate = om.readValue(amountBody, TransferTemplate.class);
-						AuthService.guardAccount(aSession, transTemplate.getSourceAccountId(), "Admin");
+						TransferTemplate transTemplate = om.readValue(dataBody, TransferTemplate.class);
+						AuthService.guardAccount(req.getSession(false), transTemplate.getSourceAccountId(), "Admin");
+						AuthService.checkStatus(req.getSession(false), transTemplate.getSourceAccountId());
+						AuthService.checkStatus(req.getSession(false), transTemplate.getTargetAccountId());
 						
 						AbstractAccount sender = accountController.findAccountById(transTemplate.getSourceAccountId());
 						AbstractAccount receiver = accountController.findAccountById(transTemplate.getTargetAccountId());
@@ -274,8 +302,25 @@ public class FrontController extends HttpServlet {
 							}
 						}
 						break;
+					case "share":
+						SharingTemplate shareTemplate = om.readValue(dataBody, SharingTemplate.class);
+						AuthService.guard(req.getSession(false), "Admin","Employee","Premium");
+						AuthService.guardAccount(req.getSession(false),shareTemplate.getAccountId(),"Admin");
+						AuthService.checkForAccount(shareTemplate.getAccountId());
+						AuthService.checkForUser(shareTemplate.getUserId());
+						AuthService.checkStatus(req.getSession(false), shareTemplate.getAccountId());
+						
+						AbstractAccount a = accountController.findAccountById(shareTemplate.getAccountId());
+						User shareU = userController.findUserById(shareTemplate.getUserId());
+						if(accountController.linkUserToAccount(a, shareU) == 0) {
+							res.getWriter().println(om.writeValueAsString(new MessageTemplate("Account #" + a.getAccountId() + " has been linked to " + shareU.getUsername())));
+							res.setStatus(200);
+						}
+						else res.setStatus(400);
+						
+						break;
 					}
-				} else {
+				} else if (portions.length == 1) {
 					AuthService.guard(req.getSession(false), "Standard","Premium","Employee","Admin");
 					User currentUser = (User) aSession.getAttribute("currentUser");
 					BufferedReader aReader = req.getReader();
@@ -289,12 +334,30 @@ public class FrontController extends HttpServlet {
 					}
 					
 					String accountBody = asb.toString();
+					try {
+						AbstractAccount AccountData = om.readValue(accountBody,AbstractAccount.class);
+						if (AccountData.getAccountId() == 0) {
+							int newAccountId = accountController.insert(AccountData, currentUser);
+							
+							res.setStatus(200);
+							res.getWriter().println(om.writeValueAsString(accountController.findAccountById(newAccountId)));
+						}
+						else {
+							res.setStatus(200);
+							res.getWriter().println(om.writeValueAsString(new MessageTemplate("Set the account ID to zero to add it.")));
+						}
+					}
+					catch (JsonMappingException e) {
+						if(e.getCause() instanceof IllegalArgumentException) {
+							res.getWriter().println(om.writeValueAsString(new MessageTemplate("Balance must be at least $0")));
+						}
+						else {
+							res.getWriter().println(om.writeValueAsString(new MessageTemplate("Invalid account information")));
+						}
+						res.setStatus(401);
+						res.setContentType("application/json");
+					}
 					
-					AbstractAccount AccountData = om.readValue(accountBody,AbstractAccount.class);
-					int newAccountId = accountController.insert(AccountData, currentUser);
-					
-					res.setStatus(200);
-					res.getWriter().println(om.writeValueAsString(accountController.findAccountById(newAccountId)));
 				}
 				res.setContentType("application/json");
 				break;
@@ -334,16 +397,59 @@ public class FrontController extends HttpServlet {
 					res.setStatus(401);
 					return;
 				}
+				User standU = (User) req.getSession().getAttribute("currentUser");
+				List<AbstractAccount> userAccounts = accountController.findAccountsByOwner(standU.getId());
+				if(userAccounts.isEmpty()) {
+					String noAccountMessage = "You can't upgrade to Premium until you create an account and deposit at least $" + User.PremiumPrice + " to pay for it.";
+					res.getWriter().println(om.writeValueAsString(new MessageTemplate(noAccountMessage)));
+					res.setContentType("application/json");
+					res.setStatus(401);
+					return;
+				}
+				else {
+					boolean paid = false;
+					for(AbstractAccount acc : userAccounts) {
+						if (acc.getBalance() >= User.PremiumPrice && !paid) {
+							accountController.withdraw(acc,User.PremiumPrice);
+							standU.setRole(new Role(2,"Premium"));
+							userController.updateUser(standU);
+							paid = true;
+						}
+						
+					}
+					if(!paid) {
+						String noMoneyMessage = "You can't upgrade to Premium until you have at least $" + User.PremiumPrice + " in one of your accounts to pay for it.";
+						res.getWriter().println(om.writeValueAsString(new MessageTemplate(noMoneyMessage)));
+						res.setContentType("application/json");
+						res.setStatus(401);
+						return;
+					}
+				}
+				String noMoneyMessage = "You paid $" + User.PremiumPrice +" and are now a Premium user.";
+				res.getWriter().println(om.writeValueAsString(new MessageTemplate(noMoneyMessage)));
 				res.setStatus(200);
 			}
-		} catch (NotLoggedInException e) {
-			e.printStackTrace();
+		} catch(NonexistentAccountException e) {
+			res.setStatus(400);
+			res.getWriter().println(om.writeValueAsString(new MessageTemplate("Invalid Account ID")));
+			res.setContentType("application/json"); 
+		}
+		catch(NonexistentUserException e) {
+			res.setStatus(400);
+			res.getWriter().println(om.writeValueAsString(new MessageTemplate("Invalid User ID")));
+			res.setContentType("application/json"); 
+		}
+		catch (ProhibitedStatusException e) {
+			res.setStatus(401);
+			res.getWriter().println(om.writeValueAsString(new MessageTemplate("You cannot make transactions with accounts that aren't open.")));
+			res.setContentType("application/json"); 
+		}
+		catch (NotLoggedInException e) {
 			res.setStatus(401);
 			res.getWriter().println(om.writeValueAsString(new MessageTemplate("You're not logged in.")));
 			res.setContentType("application/json"); 
 			}
-			catch (AuthorizationException e) {
-			e.printStackTrace();
+		catch (AuthorizationException e) {
 			res.setStatus(401);
 			res.getWriter().println(om.writeValueAsString(new MessageTemplate("Access denied")));
 			res.setContentType("application/json");
@@ -379,11 +485,10 @@ public class FrontController extends HttpServlet {
 			String body = sb.toString();
 			switch(portions[0]) {
 			case "users":
-				
-				
 				User dataForUser = om.readValue(body,User.class);
 				
 				AuthService.guard(session, dataForUser.getId(), "Admin");
+				AuthService.checkForUser(dataForUser.getId());
 				
 				
 				
@@ -394,8 +499,8 @@ public class FrontController extends HttpServlet {
 					
 				}
 				else {
-					res.setStatus(400);
-					writer.println(om.writeValueAsString(new MessageTemplate("No user was updated. The entered user may not exist.")));
+					res.setStatus(500);
+					writer.println(om.writeValueAsString(new MessageTemplate("No user was updated.")));
 				}
 				res.setContentType("application/json");
 				break;
@@ -404,8 +509,7 @@ public class FrontController extends HttpServlet {
 				AbstractAccount dataForAccount = om.readValue(body,AbstractAccount.class);
 				
 				AuthService.guard(session, "Admin");
-				
-				
+				AuthService.checkForAccount(dataForAccount.getAccountId());
 				
 				if(accountController.updateAccount(dataForAccount) == 0) {
 					AbstractAccount changedAccount = accountController.findAccountById(dataForAccount.getAccountId());
@@ -414,14 +518,29 @@ public class FrontController extends HttpServlet {
 					
 				}
 				else {
-					res.setStatus(400);
-					writer.println(om.writeValueAsString(new MessageTemplate("No account was updated. The entered account may not exist.")));
+					res.setStatus(500);
+					writer.println(om.writeValueAsString(new MessageTemplate("No account was updated.")));
 				}
 				res.setContentType("application/json");
 				break;
 				
 			}
-		} catch(AuthorizationException e) {
+		}
+		catch(NonexistentAccountException e) {
+			res.setStatus(400);
+			res.getWriter().println(om.writeValueAsString(new MessageTemplate("Invalid Account ID")));
+			res.setContentType("application/json"); 
+		}
+		catch(NonexistentUserException e) {
+			res.setStatus(400);
+			res.getWriter().println(om.writeValueAsString(new MessageTemplate("Invalid User ID")));
+			res.setContentType("application/json"); 
+		}
+		catch(NotLoggedInException e) {
+			res.setStatus(401);
+			writer.println("You're not logged in.");
+		}
+		catch(AuthorizationException e) {
 			res.setStatus(401);
 			writer.println("Access Denied");
 		}

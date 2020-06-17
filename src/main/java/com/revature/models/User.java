@@ -144,6 +144,6 @@ public class User {
 				+ ", lastName=" + lastName + ", email=" + email + ", role=" + role + "]";
 	}
 	
-	
+	public static double PremiumPrice = 74.99;
 	
 }

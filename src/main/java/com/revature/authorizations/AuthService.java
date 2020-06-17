@@ -5,14 +5,20 @@ import java.util.List;
 
 import javax.servlet.http.HttpSession;
 
+import com.revature.exceptions.NonexistentAccountException;
+import com.revature.exceptions.NonexistentUserException;
 import com.revature.exceptions.NotLoggedInException;
+import com.revature.exceptions.ProhibitedStatusException;
 import com.revature.exceptions.ProhibitedUserException;
 import com.revature.models.AbstractAccount;
+import com.revature.models.AccountStatus;
 import com.revature.models.User;
 import com.revature.web.AccountController;
+import com.revature.web.UserController;
 
 public class AuthService {
 	private static final AccountController aController = new AccountController();
+	private static final UserController uController = new UserController();
 	public static void guard(HttpSession session,String...roles) {
 		User currentUser = session == null ? null : (User) session.getAttribute("currentUser");
 		if(session == null || currentUser == null) {
@@ -58,6 +64,25 @@ public class AuthService {
 			if(!authorized) {
 				throw new ProhibitedUserException();
 			}
+		}
+	}
+	
+	public static void checkStatus(HttpSession session, int accountID) {
+		AbstractAccount a = aController.findAccountById(accountID);
+		if(a.getStatus() != AccountStatus.Open) {
+			throw new ProhibitedStatusException();
+		}
+	}
+	
+	public static void checkForUser(int id) {
+		if(uController.findUserById(id) == null) {
+			throw new NonexistentUserException();
+		}
+	}
+	
+	public static void checkForAccount(int id) {
+		if (aController.findAccountById(id) == null) {
+			throw new NonexistentAccountException();
 		}
 	}
 }
